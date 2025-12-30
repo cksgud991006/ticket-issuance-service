@@ -1,0 +1,12 @@
+# output files
+**/bin/*
+**/obj/*
+
+# configuration files
+**/Properties/*
+
+# server files
+appsettings.Development.json
+
+# db files
+**/Migrations/*
