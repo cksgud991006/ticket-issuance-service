@@ -20,7 +20,7 @@ public class CouponRepository : ICouponRepository
     }
 
 
-    public async Task<bool> TryIssueCoupon(int userId)
+    public async Task<Coupon?> TryIssueCoupon(int userId)
     {
         var coupon = Coupon.Create(userId);
         _context.Coupons.Add(coupon);
@@ -35,9 +35,9 @@ public class CouponRepository : ICouponRepository
             );
 
         if (affected == 0)
-            return false;
+            return null;
         
         await _context.SaveChangesAsync();
-        return true;
+        return coupon;
     }
 }

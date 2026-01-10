@@ -21,12 +21,12 @@ public class CouponIssueService: ICouponService
             return CouponIssueResult.AlreadyIssued();
         }
 
-        bool issued = await _couponRepository.TryIssueCoupon(userId); 
-        if (!issued)
+        var coupon = await _couponRepository.TryIssueCoupon(userId); 
+        if (coupon == null)
         {
             return CouponIssueResult.SoldOut();
         }
 
-        return CouponIssueResult.Success();
+        return CouponIssueResult.Success(coupon);
     }
 }

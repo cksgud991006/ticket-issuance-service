@@ -10,3 +10,7 @@ appsettings.Development.json
 
 # db files
 **/Migrations/*
+
+# log files
+note.txt
+*.log

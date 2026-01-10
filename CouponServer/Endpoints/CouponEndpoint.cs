@@ -13,7 +13,7 @@ public static class CouponEndpoint
         app.MapGet("/coupons/{couponId}", GetCouponByCouponId);
         
         // POST
-        app.MapPost("/coupons/issue", IssueCoupon);
+        app.MapPost("/coupons", IssueCoupon);
     }
 
     private static async Task<IResult> GetCouponByUserId(
@@ -36,7 +36,13 @@ public static class CouponEndpoint
         return result switch
         {
             { IsSuccess: true } =>
-                Results.Ok(),
+                Results.Created(
+                    $"/coupons/{result.Coupon!.CouponId}",
+                    new CouponIssueResponse(
+                        result.Coupon!.UserId,
+                        result.Coupon!.CouponId
+                    )
+                ),
 
             { FailureReason: CouponIssueFailureReason.AlreadyIssued } =>
                 Results.Conflict("Coupon already issued"),
