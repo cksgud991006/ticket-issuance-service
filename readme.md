@@ -1,11 +1,11 @@
-# Coupon Issuance Backend Service (Practice Project)
+# Ticket Issuance Backend Service (Practice Project)
 
 ## Overview
 
-This project is a backend practice service designed to issue a limited number of coupons while ensuring:
+This project is a backend practice service designed to issue a limited number of Tickets while ensuring:
 
 - Concurrency safety (no over-issuance)
-- Idempotent request handling (duplicate requests do not create duplicate coupons)
+- Idempotent request handling (duplicate requests do not create duplicate Tickets)
 
 The focus of this project is to practice on core backend engineering fundamentals rather than feature completeness.
 

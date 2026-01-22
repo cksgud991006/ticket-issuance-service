@@ -1,7 +1,7 @@
 ## Load Testing
 
 Tool: JMeter  
-Scenario: Concurrent coupon issuance  
+Scenario: Concurrent Ticket issuance  
 Users: 1 → 1,000  
 Duration: 5 minutes  
 Ramp-Up period: 30 seconds
@@ -18,7 +18,7 @@ Ramp-Up period: 30 seconds
 - 0 data integrity violations
 
 ### Bottlenecks Identified
-- Row-level database lock contention on coupon inventory updates
+- Row-level database lock contention on Ticket inventory updates
 - Throughput plateau observed under increased concurrency
 - CPU utilization remained low (~5–10%), indicating a lock-bound rather than compute-bound workload
 

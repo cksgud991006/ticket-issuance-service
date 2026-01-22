@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="CouponServer.Tests/CouponServer.Tests.csproj" />
-  <Project Path="CouponServer/CouponServer.csproj" />
-</Solution>
