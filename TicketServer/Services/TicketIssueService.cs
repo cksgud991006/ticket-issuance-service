@@ -13,20 +13,20 @@ public class TicketIssueService: ITicketService
     }
 
     public async Task<TicketIssueResult> IssueAsync(
-        int userId)
+        Guid id)
     {
 
-        if (await _TicketRepository.HasUserReceivedTicket(userId))
+        if (await _TicketRepository.HasUserReceivedTicket(id))
         {
             return TicketIssueResult.AlreadyIssued();
         }
 
-        var Ticket = await _TicketRepository.TryIssueTicket(userId); 
-        if (Ticket == null)
+        var ticket = await _TicketRepository.TryIssueTicket(id); 
+        if (ticket == null)
         {
             return TicketIssueResult.SoldOut();
         }
 
-        return TicketIssueResult.Success(Ticket);
+        return TicketIssueResult.Success(ticket);
     }
 }

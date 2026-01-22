@@ -6,5 +6,5 @@ namespace TicketServer.Services;
 public interface ITicketService
 {
     public Task<TicketIssueResult> IssueAsync(
-        int userId);
+        Guid id);
 }

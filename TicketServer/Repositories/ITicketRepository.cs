@@ -4,7 +4,7 @@ namespace TicketServer.Repositories;
 
 public interface ITicketRepository
 {
-    public Task<bool> HasUserReceivedTicket(int userId);
+    public Task<bool> HasUserReceivedTicket(Guid id);
 
-    public Task<Ticket?> TryIssueTicket(int userId);
+    public Task<Ticket?> TryIssueTicket(Guid id);
 }

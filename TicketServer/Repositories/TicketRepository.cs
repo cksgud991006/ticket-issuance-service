@@ -13,16 +13,16 @@ public class TicketRepository : ITicketRepository
         _context = context;
     }
 
-    public Task<bool> HasUserReceivedTicket(int userId)
+    public Task<bool> HasUserReceivedTicket(Guid id)
     {
         return _context.Tickets
-            .AnyAsync(c => c.UserId == userId);
+            .AnyAsync(c => c.Id == id);
     }
 
 
-    public async Task<Ticket?> TryIssueTicket(int userId)
+    public async Task<Ticket?> TryIssueTicket(Guid id)
     {
-        var ticket = Ticket.Create(userId);
+        var ticket = Ticket.Create(id);
         _context.Tickets.Add(ticket);
 
         var affected = await _context.TicketPolicy

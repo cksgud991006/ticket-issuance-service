@@ -9,21 +9,21 @@ public static class TicketEndpoint
     public static void MapTicketEndPoints(this WebApplication app)
     {
         // GET 
-        app.MapGet("/Tickets/users/{userId}", GetTicketByUserId);
-        app.MapGet("/Tickets/{TicketId}", GetTicketByTicketId);
+        app.MapGet("/Tickets/users/{id}", GetTicketById);
+        app.MapGet("/Tickets/{ticketId}", GetTicketByTicketId);
         
         // POST
         app.MapPost("/Tickets", IssueTicket);
     }
 
-    private static async Task<IResult> GetTicketByUserId(
-        int userId)
+    private static async Task<IResult> GetTicketById(
+        Guid id)
     {
         return Results.Ok();
     } 
 
     private static async Task<IResult> GetTicketByTicketId(
-        int TicketId)
+        int ticketId)
     {
         return Results.Ok();
     } 
@@ -32,14 +32,14 @@ public static class TicketEndpoint
         TicketIssueRequest request,
         ITicketService service)
     {
-        var result = await service.IssueAsync(request.UserId);
+        var result = await service.IssueAsync(request.Id);
         return result switch
         {
             { IsSuccess: true } =>
                 Results.Created(
                     $"/Tickets/{result.Ticket!.TicketId}",
                     new TicketIssueResponse(
-                        result.Ticket!.UserId,
+                        result.Ticket!.Id,
                         result.Ticket!.TicketId
                     )
                 ),

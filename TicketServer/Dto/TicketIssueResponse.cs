@@ -3,6 +3,6 @@ using System.ComponentModel.DataAnnotations;
 namespace TicketServer.Dto;
 
 public record TicketIssueResponse(
-    [Required] int UserId,
+    [Required] Guid Id,
     [Required] int TicketId
 );

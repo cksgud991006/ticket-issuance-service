@@ -25,7 +25,7 @@ public class AppDbContext: DbContext
         {
             entity.HasKey(c => c.TicketId);
 
-            entity.Property(c => c.UserId)
+            entity.Property(c => c.Id)
                 .IsRequired();
         });
 
