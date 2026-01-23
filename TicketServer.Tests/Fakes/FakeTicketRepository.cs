@@ -25,23 +25,23 @@ public class FakeTicketRepository : ITicketRepository
         _issuedTickets = 0;
     }
 
-    public Task<bool> HasUserReceivedTicket(int userId)
+    public Task<bool> HasUserReceivedTicket(Guid id)
     {
         return Task.FromResult(
-            _Tickets.Any(c => c.UserId == userId)
+            _Tickets.Any(c => c.Id == id)
         );
     }
 
 
-    public Task<bool> TryIssueTicket(int userId)
+    public Task<bool> TryIssueTicket(Guid id)
     {
 
         // mirrors DB constraint: inventory exhausted
         if (_issuedTickets >= _totalQuantity)
             return Task.FromResult(false);
 
-        var Ticket = Ticket.Create(userId);
-        _Tickets.Add(Ticket);
+        var ticket = Ticket.Create(id);
+        _Tickets.Add(ticket);
         _issuedTickets++;
         
         return Task.FromResult(true);
