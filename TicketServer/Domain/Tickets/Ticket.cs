@@ -1,22 +1,16 @@
+using TicketServer.Domain.Seats;
+
 namespace TicketServer.Domain.Tickets;
 
 public class Ticket
 {
-    public Guid Id { get; private set; }
+    public int Id { get; init; } // PK
     
-    public int TicketId { get; private set; }
-    
-    private Ticket()
-    {
-        Id = Guid.NewGuid();
-        TicketId = -1;
-    }
-
-    public static Ticket Create(Guid id)
+    public static Ticket Create(int id, string flightId, DateTimeOffset date, ClassType classType)
     {
         return new Ticket
         {
-            Id = id
+            
         };
     }
 }

@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TicketServer.Dto;
+namespace TicketServer.Api.Dto;
 
-public record TicketIssueRequest(
+public record TicketWaitRequest(
     [Required] Guid Id,
     [Required] DateTimeOffset RequestTime,
     [Required] string IdempotencyKey

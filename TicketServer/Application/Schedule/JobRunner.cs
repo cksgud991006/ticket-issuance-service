@@ -1,20 +1,18 @@
 using NRedisStack;
 using NRedisStack.RedisStackCommands;
 using StackExchange.Redis;
-using TicketServer.Schedule.Redis;
+using TicketServer.Domain.Redis;
 
 namespace TicketServer.Schedule;
 public class JobRunner : IJobRunner
 {
     private readonly IDatabase _redis;
-    private readonly IJobWorker _jobWorker;
     private readonly int _loadCount = 1000;
     private int _startCount = 0;
 
-    public JobRunner(ConnectionMultiplexer connectionMultiplexer, IJobWorker jobWorker)
+    public JobRunner(ConnectionMultiplexer connectionMultiplexer)
     {
         _redis = connectionMultiplexer.GetDatabase();
-        _jobWorker = jobWorker;
     }
     
     public async Task RunAsync()
@@ -22,13 +20,19 @@ public class JobRunner : IJobRunner
 
         // Implementation for running the job worker
         var jobs = await _redis.SortedSetRangeByRankAsync(
-                RedisKeys.JobScheduleKey,
+                RedisKeys.JobWaitingKey,
                 _startCount,
                 _loadCount,
                 Order.Ascending);
 
-        var ids = jobs.Select(j => Guid.Parse(j.ToString())).ToArray();
+        // add to active users and redirect to issuing api
+        foreach (var job in jobs)
+        {
+            var userId = job.ToString();
 
-        await _jobWorker.ExecuteAsync(ids);
+            var score = await _redis.SortedSetScoreAsync(RedisKeys.JobWaitingKey, userId);
+            await _redis.SortedSetAddAsync(RedisKeys.JobActiveKey, userId, score.Value);
+            await _redis.SortedSetRemoveAsync(RedisKeys.JobWaitingKey, userId);
+        }
     }
 }

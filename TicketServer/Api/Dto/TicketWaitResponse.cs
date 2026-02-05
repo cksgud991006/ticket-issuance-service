@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TicketServer.Dto;
+namespace TicketServer.Api.Dto;
 
-public record TicketIssueResponse(
+public record TicketWaitResponse(
     [Required] Guid Id,
     [Required] int TicketId
 );
