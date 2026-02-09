@@ -8,7 +8,7 @@ namespace TicketServer.Schedule;
 public class JobScheduler : IJobScheduler
 {
     private readonly IDatabase _redis;
-    public JobScheduler(ConnectionMultiplexer connectionMultiplexer)
+    public JobScheduler(IConnectionMultiplexer connectionMultiplexer)
     {
         _redis = connectionMultiplexer.GetDatabase();
     }

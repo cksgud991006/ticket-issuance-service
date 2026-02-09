@@ -37,6 +37,11 @@ public class SeatInventoryRepository : ISeatInventoryRepository
             s.SeatNumber == seatNumber);
     }
 
+    public Task<List<Seat>> GetSeats()
+    {
+        return _context.Seats.ToListAsync();
+    }
+
     public Task UpdateTotalSeats(string flightNumber, int newTotalSeats)
     {
         _context.FlightInventories

@@ -1,6 +1,5 @@
 using TicketServer.Application.Services;
 using TicketServer.Domain.Tickets;
-using TicketServer.Dto;
 using TicketServer.Api.Dto;
 
 namespace TicketServer.Endpoints;
@@ -24,16 +23,36 @@ public static class TicketEndpoint
         IQueueingService service)
     {
         // polling queue status from redis
+        var queueResponse = await service.GetPositionInQueueAsync(id);
 
-        var position = await service.GetPositionInQueueAsync(id);
-
-        return Results.Ok();
+        return queueResponse switch
+        {
+            { IsInQueue: true } =>
+                Results.Ok(
+                    new TicketWaitResponse(
+                        id,
+                        queueResponse.Position
+                    )
+                ),
+            { IsInQueue: false } =>
+                Results.Ok(
+                    new TicketWaitResponse(
+                        id,
+                        -1
+                    )
+                ),
+            _ =>
+                Results.StatusCode(500)
+        };
     }
 
-    private static async Task<IResult> GetTicketStatus()
+    private static async Task<IResult> GetTicketStatus(
+        Guid id,
+        ISeatInventoryService service)
     {
-        // placeholder
-        return Results.Ok();
+        // TODO: implement ticket status retrieval
+        var ticketResponse = await service.GetTicketInfoAsync(id);
+        return Results.Ok(ticketResponse);
     }
 
     private static async Task<IResult> Enqueue(
@@ -50,28 +69,31 @@ public static class TicketEndpoint
     {
         var result = await service.ReserveSeatAsync(request.FlightNumber, request.Date, request.SeatClass, request.SeatId, request.Id);
         // TODO: process return to proper result
-        /*
+        
         return result switch
         {
-            { IsSuccess: true } =>
+            { Success: true } =>
                 Results.Created(
-                    $"/Tickets/{result.Ticket!.TicketId}",
+                    $"/tickets/{result.BookingId}",
                     new TicketIssueResponse(
-                        result.Ticket!.Id,
-                        result.Ticket!.TicketId
+                        result.BookingId,
+                        result.FlightNumber,
+                        result.SeatNumber,
+                        result.Date,
+                        result.Details,
+                        result.Success
                     )
                 ),
 
-            { FailureReason: TicketIssueFailureReason.AlreadyIssued } =>
-                Results.Conflict("Ticket already issued"),
-
-            { FailureReason: TicketIssueFailureReason.SoldOut } =>
-                Results.Conflict("Ticket sold out"),
-
+            { Success: false } =>
+                Results.Conflict(
+                    new TicketIssueFailure(
+                        result.Details,
+                        result.Success
+                    )
+                ),
             _ =>
                 Results.StatusCode(500)
         };
-        */
-        return Results.Ok(result);
     }
 }

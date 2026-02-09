@@ -10,7 +10,7 @@ public class JobRunner : IJobRunner
     private readonly int _loadCount = 1000;
     private int _startCount = 0;
 
-    public JobRunner(ConnectionMultiplexer connectionMultiplexer)
+    public JobRunner(IConnectionMultiplexer connectionMultiplexer)
     {
         _redis = connectionMultiplexer.GetDatabase();
     }

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 
 namespace TicketServer.Domain.Seats;    
@@ -24,22 +25,22 @@ public enum SeatStatus
 
 public class Seat
 {
+    [Key]
     public int SeatId { get; private set; } // PK
     public string FlightNumber { get; init; } = null!;
 
-    public DateTimeOffset Date { get; private set; }
+    public DateTimeOffset Date { get; set; }
 
-    public ClassType SeatClass { get; private set; }
+    public ClassType SeatClass { get; init; }
 
-    public string SeatNumber { get; private set; } = null!;
-    public SeatStatus Status { get; private set; }
-    public string HeldByUserId { get; private set; } = null!;
+    public string SeatNumber { get; init; } = null!;
+    public SeatStatus Status { get; set; }
+    public string? HeldByUserId { get; set; }
 
-    public static Seat Create(int seatId, string flightNumber, DateTimeOffset date, ClassType seatClass, string seatNumber, SeatStatus status)
+    public static Seat Create(string flightNumber, DateTimeOffset date, ClassType seatClass, string seatNumber, SeatStatus status)
     {
         return new Seat
         {
-            SeatId = seatId,
             FlightNumber = flightNumber,
             Date = date,
             SeatClass = seatClass,

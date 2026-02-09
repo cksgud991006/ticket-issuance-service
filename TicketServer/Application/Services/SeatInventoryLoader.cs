@@ -1,46 +1,33 @@
-using TicketServer.Domain.Seats;
-using NRedisStack;
-using NRedisStack.RedisStackCommands;
 using StackExchange.Redis;
 using TicketServer.Domain.Redis;
 using TicketServer.Application.Repositories;
 
 namespace TicketServer.Application.Services;
 
-public class SeatInventoryLoader : ISeatInventoryLoader
+public static class SeatInventoryLoader
 {
-    private readonly ISeatInventoryRepository _seatInventoryRepository;
-    private readonly IDatabase _redis;
-        
-    public SeatInventoryLoader(ISeatInventoryRepository seatInventoryRepository, 
-                            IConnectionMultiplexer connectionMultiplexer)
+    public static async Task<int> LoadSeatInventoryAsync(IServiceProvider serviceProvider)
     {
-        _seatInventoryRepository = seatInventoryRepository;
-        _redis = connectionMultiplexer.GetDatabase();
-    }
+        var scope = serviceProvider.CreateScope();
+        var seatInventoryRepository = scope.ServiceProvider.GetRequiredService<ISeatInventoryRepository>();
+        var multiplexer = scope.ServiceProvider.GetRequiredService<IConnectionMultiplexer>();
+        var redis = multiplexer.GetDatabase();
+        var seats = await seatInventoryRepository.GetSeats();
 
-    public async Task<int> TryLoadSeatInventoryAsync(
-        string flightNumber,
-        DateTimeOffset date,
-        string classType,
-        string seatId)
-    {
-        var flightKey = RedisKeys.GetFlightKey(flightNumber, date, classType);
-        if (await _redis.KeyExistsAsync(flightKey))
+        foreach (var seat in seats)
         {
-            return 0;
+            var flightKey = RedisKeys.GetMasterFlightKey(seat.FlightNumber, seat.Date);
+            if (!await redis.KeyExistsAsync(flightKey))
+            {
+                var availableSeat = await seatInventoryRepository.GetAvailableSeats(seat.FlightNumber);
+                await redis.StringSetAsync(flightKey, availableSeat);
+            }
+
+            var seatField = RedisKeys.GetSeatField(seat.FlightNumber, seat.Date, seat.SeatClass, seat.SeatNumber);
+
+            await redis.SetAddAsync(flightKey, seatField);
         }
 
-        var remaingSeat = await _seatInventoryRepository.GetTotalSeats(flightNumber);
-        await _redis.StringSetAsync(flightKey, remaingSeat);
-
-        /*
-        var seatKey = RedisKeys.GetSeatField(flightNumber, date, classType, seatId);
-        if (await _redis.KeyExistsAsync(seatKey))
-        {
-            return 0;
-        }
-        */
         return 1;
     }
 }

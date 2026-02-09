@@ -1,10 +1,10 @@
-using TicketServer.Domain.Status;
+using TicketServer.Domain.Response;
 
 namespace TicketServer.Application.Services;
 
 public interface IQueueingService
 {
-    public Task<QueueStatus> GetPositionInQueueAsync(
+    public Task<QueueResponse> GetPositionInQueueAsync(
         Guid id);
 
     public Task EnqueueAsync(
