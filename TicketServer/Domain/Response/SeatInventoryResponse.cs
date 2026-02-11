@@ -34,4 +34,7 @@ public class SeatInventoryResponse
 
     public static SeatInventoryResponse CreateFailureResponse(string flightNumber, DateTimeOffset date, ClassType seatClass, string seatNumber, string details) =>
         new SeatInventoryResponse(false, flightNumber, date, seatClass, seatNumber, Guid.Empty, details);
+
+    public static SeatInventoryResponse NoAvailableSeatsResponse(string flightNumber, DateTimeOffset date, ClassType seatClass, string seatNumber, string details) =>
+        new SeatInventoryResponse(false, flightNumber, date, seatClass, seatNumber, Guid.Empty, details);
 }

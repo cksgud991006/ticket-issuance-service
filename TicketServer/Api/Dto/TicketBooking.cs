@@ -5,7 +5,6 @@ namespace TicketServer.Api.Dto;
 
 
 public record TicketSeatRequest(
-    [Required] string FlightId,
     [Required] string FlightNumber,
     [Required] DateTimeOffset Date,
     [Required] ClassType SeatClass,

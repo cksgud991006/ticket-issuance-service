@@ -1,15 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace TicketServer.Domain.Seats;    
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ClassType
 {
-    [EnumMember(Value = "Economy")]
     Economy,
-    [EnumMember(Value = "Business")]
     Business,
-    [EnumMember(Value = "First")]
     First
 }
 

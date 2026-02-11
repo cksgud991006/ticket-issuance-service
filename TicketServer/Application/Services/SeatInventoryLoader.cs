@@ -4,30 +4,36 @@ using TicketServer.Application.Repositories;
 
 namespace TicketServer.Application.Services;
 
-public static class SeatInventoryLoader
+public class SeatInventoryLoader(IServiceScopeFactory scopeFactory, ILogger<SeatInventoryLoader> logger): IHostedService
 {
-    public static async Task<int> LoadSeatInventoryAsync(IServiceProvider serviceProvider)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
-        var scope = serviceProvider.CreateScope();
-        var seatInventoryRepository = scope.ServiceProvider.GetRequiredService<ISeatInventoryRepository>();
-        var multiplexer = scope.ServiceProvider.GetRequiredService<IConnectionMultiplexer>();
-        var redis = multiplexer.GetDatabase();
-        var seats = await seatInventoryRepository.GetSeats();
-
-        foreach (var seat in seats)
+        using (IServiceScope scope = scopeFactory.CreateScope())
         {
-            var flightKey = RedisKeys.GetMasterFlightKey(seat.FlightNumber, seat.Date);
-            if (!await redis.KeyExistsAsync(flightKey))
+            var seatInventoryRepository = scope.ServiceProvider.GetRequiredService<ISeatInventoryRepository>();
+            var multiplexer = scope.ServiceProvider.GetRequiredService<IConnectionMultiplexer>();
+            var redis = multiplexer.GetDatabase();
+            var seats = await seatInventoryRepository.GetSeats();
+
+            foreach (var seat in seats)
             {
-                var availableSeat = await seatInventoryRepository.GetAvailableSeats(seat.FlightNumber);
-                await redis.StringSetAsync(flightKey, availableSeat);
+                var flightAvailableCountKey = RedisKeys.GetFlightAvailableCountKey(seat.FlightNumber, seat.Date);
+                if (!await redis.KeyExistsAsync(flightAvailableCountKey).WaitAsync(cancellationToken))
+                {
+                    var availableSeat = await seatInventoryRepository.GetAvailableSeats(seat.FlightNumber);
+                    await redis.StringSetAsync(flightAvailableCountKey, availableSeat).WaitAsync(cancellationToken);
+                }
+
+                var flightKey = RedisKeys.GetMasterFlightKey(seat.FlightNumber, seat.Date);
+                var seatField = RedisKeys.GetSeatField(seat.SeatClass, seat.SeatNumber);
+                logger.LogInformation("Adding seat {SeatField} to Redis set for flight {FlightKey}", seatField, flightKey);
+                await redis.SetAddAsync(flightKey, seatField).WaitAsync(cancellationToken);
             }
-
-            var seatField = RedisKeys.GetSeatField(seat.FlightNumber, seat.Date, seat.SeatClass, seat.SeatNumber);
-
-            await redis.SetAddAsync(flightKey, seatField);
         }
+    }
 
-        return 1;
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        // Implementation for stopping the inventory loader if needed
     }
 }

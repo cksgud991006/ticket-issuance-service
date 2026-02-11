@@ -7,14 +7,17 @@ using TicketServer.Domain.Response;
 namespace TicketServer.Application.Services;
 public class SeatInventoryService : ISeatInventoryService
 {
+    private readonly ILogger<SeatInventoryService> _logger;
     private readonly ISeatInventoryRepository _seatInventoryRepository;
     private readonly IDatabase _redis;
     private readonly ISeatInventoryRepository _seatRepository;
 
-    public SeatInventoryService(ISeatInventoryRepository seatInventoryRepository,
+    public SeatInventoryService(ILogger<SeatInventoryService> logger,
+                              ISeatInventoryRepository seatInventoryRepository,
                               IConnectionMultiplexer connectionMultiplexer,
                               ISeatInventoryRepository seatRepository)
     {
+        _logger = logger;           
         _seatInventoryRepository = seatInventoryRepository;
         _redis = connectionMultiplexer.GetDatabase();
         _seatRepository = seatRepository;
@@ -29,12 +32,21 @@ public class SeatInventoryService : ISeatInventoryService
     public async Task<SeatInventoryResponse> ReserveSeatAsync(string flightNumber, DateTimeOffset date, ClassType classType, string seatId, Guid id)
     {
         
+        var pos = await _redis.SortedSetRankAsync(RedisKeys.JobActiveKey, id.ToString());
+        if (pos == null) {
+            return SeatInventoryResponse.CreateFailureResponse(flightNumber, date, classType, seatId, "User is not in the active queue.");
+        }
+
+        var availableCountKey = RedisKeys.GetFlightAvailableCountKey(flightNumber, date);
         var masterFlightKey = RedisKeys.GetMasterFlightKey(flightNumber, date);
         var reservedFlightKey = RedisKeys.GetReservedFlightKey(flightNumber, date);
-        var seatField = RedisKeys.GetSeatField(flightNumber, date, classType, seatId) ;
+        var seatField = RedisKeys.GetSeatField(classType, seatId) ;
+
+        _logger.LogInformation("Attempting to reserve seat. Flight: {FlightNumber}, Date: {Date}, Class: {ClassType}, Seat: {SeatId}, UserId: {UserId}", flightNumber, date, classType, seatId, id);
+        _logger.LogInformation("Redis Keys - AvailableCountKey: {AvailableCountKey}, MasterFlightKey: {MasterFlightKey}, ReservedFlightKey: {ReservedFlightKey}, SeatField: {SeatField}", availableCountKey, masterFlightKey, reservedFlightKey, seatField);
         var result = await _redis.ScriptEvaluateAsync(
             RedisLuaScripts.LoadSeatInventoryScript.ExecutableScript,
-            [masterFlightKey, reservedFlightKey],
+            [availableCountKey, masterFlightKey, reservedFlightKey],
             [seatField, id.ToString()]);
         
         var data = (RedisResult[]) result!;
@@ -53,6 +65,8 @@ public class SeatInventoryService : ISeatInventoryService
                 return SeatInventoryResponse.CreateSuccessResponse(flightNumber, date, classType, seatId, bookingId, details);
             case -1:
                 return SeatInventoryResponse.CreateFailureResponse(flightNumber, date, classType, seatId, details);
+            case -2:
+                return SeatInventoryResponse.NoAvailableSeatsResponse(flightNumber, date, classType, seatId, details);
             default:
                 throw new InvalidOperationException("Unexpected Response code from Redis script.");
         }
