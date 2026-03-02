@@ -58,7 +58,7 @@ builder.Services.AddDbContext<SeatContext>(options => options.UseNpgsql(connecti
 
 var app = builder.Build();
 
-app.UseCors();
+app.UseCors("AllowGitHubPages");
 
 app.MapTicketEndPoints();
 
