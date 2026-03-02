@@ -36,11 +36,15 @@ builder.Services.AddScoped<ISeatInventoryRepository, SeatInventoryRepository> ()
 builder.Services.AddHostedService<TaskRunnerService>();
 builder.Services.AddHostedService<DbInitializer>();
 builder.Services.AddHostedService<SeatInventoryLoader>();
+
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(builder =>
+    options.AddPolicy("AllowGitHubPages",
+    builder =>
     {
-        builder.AllowAnyOrigin()
+        builder.WithOrigins(allowedOrigins)
                .AllowAnyMethod()
                .AllowAnyHeader();
     });
