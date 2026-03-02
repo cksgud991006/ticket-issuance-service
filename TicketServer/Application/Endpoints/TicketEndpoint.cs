@@ -9,7 +9,11 @@ public static class TicketEndpoint
     public static void MapTicketEndPoints(this WebApplication app)
     {
         // GET 
-        app.MapGet("/queue/{id}/status", GetQueueStatus); // pulling
+        app.MapGet("/queue/status/{id}", GetQueueStatus); // pulling
+        app.MapGet("/active/status/{id}", GetActiveStatus); // pulling
+        app.MapGet("/seats/{flightNumber}", GetAvailableFlightSeatCount);
+        app.MapGet("/seats/total/{flightNumber}", GetTotalFlightSeats);
+        app.MapGet("/seats/reserved/{flightNumber}", GetReservedFlightSeats);
         app.MapGet("/tickets/{ticketId}", () => GetTicketStatus); // placeholder
         
         // POST
@@ -46,13 +50,81 @@ public static class TicketEndpoint
         };
     }
 
+    private static async Task<IResult> GetActiveStatus(
+        Guid id,
+        ISessionService service)
+    {
+        // polling active status from redis
+        var sessionStatus = await service.GetSessionStatusAsync(id);
+
+        return sessionStatus switch
+        {
+            { IsActive: true } =>
+                Results.Ok(
+                    new TicketSessionResponse(
+                        id,
+                        sessionStatus.TimeExpiry.ToUnixTimeSeconds()
+                    )
+                ),
+            { IsActive: false } =>
+                Results.Ok(
+                    new TicketSessionResponse(
+                        id,
+                        -1
+                    )
+                ),
+            _ =>
+                Results.StatusCode(500)
+        };
+    }
+
+    private static async Task<IResult> GetAvailableFlightSeatCount(
+        string flightNumber,
+        ISeatInventoryService service)
+    {
+        return Results.Ok(
+            await service.GetAvailableSeatCountAsync(flightNumber)
+        );
+    }
+
+    private static async Task<IResult> GetTotalFlightSeats(
+        string flightNumber,
+        ISeatInventoryService service)
+    {
+        string[] rawSeats = await service.GetTotalFlightSeatsAsync(flightNumber);
+
+        var structuredSeats = rawSeats.Select(s => {
+            var parts = s.Split(':');
+            return new SeatInfo(parts[0], parts[1]);
+        }).ToArray();
+
+        return Results.Ok(
+            structuredSeats
+        );
+    }
+
+    private static async Task<IResult> GetReservedFlightSeats(
+        string flightNumber,
+        ISeatInventoryService service)
+    {
+        string[] rawSeats = await service.GetReservedFlightSeatsAsync(flightNumber);
+
+        var structuredSeats = rawSeats.Select(s => {
+            var parts = s.Split(':');
+            return new SeatInfo(parts[0], parts[1]);
+        }).ToArray();
+
+        return Results.Ok(
+            structuredSeats
+        );
+    }
+
     private static async Task<IResult> GetTicketStatus(
         Guid id,
         ISeatInventoryService service)
     {
         // TODO: implement ticket status retrieval
-        var ticketResponse = await service.GetTicketInfoAsync(id);
-        return Results.Ok(ticketResponse);
+        return Results.Ok();
     }
 
     private static async Task<IResult> Enqueue(
@@ -60,14 +132,16 @@ public static class TicketEndpoint
         IQueueingService service)
     {
         await service.EnqueueAsync(request.Id, request.RequestTime);
-        return Results.Ok();
+        return Results.Ok(
+            new PostResponse(true)
+        );
     }
 
     private static async Task<IResult> ReserveSeat(
         TicketSeatRequest request,
         ISeatInventoryService service)
     {
-        var result = await service.ReserveSeatAsync(request.FlightNumber, request.Date, request.SeatClass, request.SeatId, request.Id);
+        var result = await service.ReserveSeatAsync(request.FlightNumber, request.SeatClass, request.SeatNumber, request.Id);
         // TODO: process return to proper result
         
         return result switch

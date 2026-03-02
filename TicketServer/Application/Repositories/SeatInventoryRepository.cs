@@ -28,11 +28,10 @@ public class SeatInventoryRepository : ISeatInventoryRepository
             .FirstOrDefaultAsync();
     }   
     
-    public Task<Seat?> GetSeat(string flightNumber, DateTimeOffset date, ClassType classType, string seatNumber)
+    public Task<Seat?> GetSeat(string flightNumber, ClassType classType, string seatNumber)
     {
         return _context.Seats.FirstOrDefaultAsync(s =>
             s.FlightNumber == flightNumber &&
-            s.Date == date &&
             s.SeatClass == classType &&
             s.SeatNumber == seatNumber);
     }

@@ -31,7 +31,8 @@ public class JobRunner : IJobRunner
             var userId = job.ToString();
 
             var score = await _redis.SortedSetScoreAsync(RedisKeys.JobWaitingKey, userId);
-            await _redis.SortedSetAddAsync(RedisKeys.JobActiveKey, userId, score.Value);
+            var timeExpiry = DateTimeOffset.UtcNow.AddMinutes(10).ToUnixTimeSeconds();
+            await _redis.SortedSetAddAsync(RedisKeys.JobActiveKey, userId, timeExpiry);
             await _redis.SortedSetRemoveAsync(RedisKeys.JobWaitingKey, userId);
         }
     }

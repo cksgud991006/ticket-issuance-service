@@ -6,12 +6,17 @@ namespace TicketServer.Application.Services;
 public interface ISeatInventoryService
 {
 
-    public Task<SeatInventoryResponse> GetTicketInfoAsync(
+    public Task<long> GetAvailableSeatCountAsync(string flightNumber);
+
+    public Task<string[]> GetTotalFlightSeatsAsync(string flightNumber);
+    
+    public Task<string[]> GetReservedFlightSeatsAsync(string flightNumber);
+
+    public Task GetTicketInfoAsync(
         Guid id);
 
     public Task<SeatInventoryResponse> ReserveSeatAsync(
         string flightNumber,
-        DateTimeOffset date,
         ClassType classType,
         string seatId,
         Guid id);

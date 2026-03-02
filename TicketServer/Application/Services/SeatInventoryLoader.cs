@@ -17,14 +17,14 @@ public class SeatInventoryLoader(IServiceScopeFactory scopeFactory, ILogger<Seat
 
             foreach (var seat in seats)
             {
-                var flightAvailableCountKey = RedisKeys.GetFlightAvailableCountKey(seat.FlightNumber, seat.Date);
+                var flightAvailableCountKey = RedisKeys.GetFlightAvailableCountKey(seat.FlightNumber);
                 if (!await redis.KeyExistsAsync(flightAvailableCountKey).WaitAsync(cancellationToken))
                 {
                     var availableSeat = await seatInventoryRepository.GetAvailableSeats(seat.FlightNumber);
                     await redis.StringSetAsync(flightAvailableCountKey, availableSeat).WaitAsync(cancellationToken);
                 }
 
-                var flightKey = RedisKeys.GetMasterFlightKey(seat.FlightNumber, seat.Date);
+                var flightKey = RedisKeys.GetMasterFlightKey(seat.FlightNumber);
                 var seatField = RedisKeys.GetSeatField(seat.SeatClass, seat.SeatNumber);
                 logger.LogInformation("Adding seat {SeatField} to Redis set for flight {FlightKey}", seatField, flightKey);
                 await redis.SetAddAsync(flightKey, seatField).WaitAsync(cancellationToken);

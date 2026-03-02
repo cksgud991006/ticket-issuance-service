@@ -7,7 +7,7 @@ public interface ISeatInventoryRepository
     // data loading
     public Task<int> GetTotalSeats(string flightNumber);
     public Task<int> GetAvailableSeats(string flightNumber);
-    public Task<Seat?> GetSeat(string flightNumber, DateTimeOffset date, ClassType classType, string seatNumber);
+    public Task<Seat?> GetSeat(string flightNumber, ClassType classType, string seatNumber);
     public Task<List<Seat>> GetSeats();
 
     // data updating

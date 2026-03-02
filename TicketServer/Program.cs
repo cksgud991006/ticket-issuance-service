@@ -21,11 +21,21 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Conn
 builder.Services.AddScoped<IJobScheduler, JobScheduler> ();
 builder.Services.AddSingleton<IJobRunner, JobRunner> ();
 builder.Services.AddScoped<IQueueingService, QueueingService> ();
+builder.Services.AddScoped<ISessionService, SessionService> ();
 builder.Services.AddScoped<ISeatInventoryService, SeatInventoryService> ();
 builder.Services.AddScoped<ISeatInventoryRepository, SeatInventoryRepository> ();
 builder.Services.AddHostedService<TaskRunnerService>();
 builder.Services.AddHostedService<DbInitializer>();
 builder.Services.AddHostedService<SeatInventoryLoader>();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
      throw new InvalidOperationException("Connection string 'AppDbContext'" +
@@ -34,6 +44,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<SeatContext>(options => options.UseSqlServer(connectionString));
 
 var app = builder.Build();
+
+app.UseCors();
 
 app.MapTicketEndPoints();
 

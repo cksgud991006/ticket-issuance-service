@@ -3,12 +3,20 @@ using TicketServer.Domain.Seats;
 
 namespace TicketServer.Api.Dto;
 
+public record PostResponse(
+    [Required] bool Success
+);
+
+public record SeatInfo(
+    [Required] string SeatClass,
+    [Required] string SeatNumber
+);
 
 public record TicketSeatRequest(
     [Required] string FlightNumber,
     [Required] DateTimeOffset Date,
     [Required] ClassType SeatClass,
-    [Required] string SeatId,
+    [Required] string SeatNumber,
     [Required] Guid Id
 );
 
@@ -21,6 +29,11 @@ public record TicketWaitRequest(
 public record TicketWaitResponse(
     [Required] Guid Id,
     [Required] int Position
+);
+
+public record TicketSessionResponse(
+    [Required] Guid Id,
+    [Required] long TimeExpiry
 );
 
 public record TicketIssueResponse(
