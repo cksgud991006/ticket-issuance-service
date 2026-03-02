@@ -5,8 +5,8 @@
 # configuration files
 **/Properties/*
 
-# server files
-appsettings.Development.json
+# host development files
+appsettings.*.json
 
 # db files
 **/Migrations/*

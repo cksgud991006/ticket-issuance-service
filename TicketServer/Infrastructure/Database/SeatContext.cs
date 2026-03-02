@@ -24,9 +24,6 @@ public class SeatContext: DbContext
             entity.Property(c => c.FlightNumber)
                 .IsRequired();
 
-            entity.Property(c => c.Date)
-                .IsRequired();
-
             entity.Property(c => c.SeatClass)
                 .IsRequired();
 

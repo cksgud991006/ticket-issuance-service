@@ -5,19 +5,28 @@ using TicketServer.Application.Repositories;
 using TicketServer.Infrastructure.Database;
 using StackExchange.Redis;
 using TicketServer.Schedule;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // register DIs
-var redisConnectionString = new ConfigurationOptions
+var redisSection = builder.Configuration.GetSection("Redis");
+var redisOptions = new ConfigurationOptions
 {
-    EndPoints = { "127.0.0.1:6379" },
-    AbortOnConnectFail = false, // Crucial: lets the app start even if Redis is slow to respond
+    EndPoints = { $"{redisSection["Host"]}:{redisSection["Port"]}" },
+    Password = redisSection["Password"],
+    Ssl = true, // Must be true for Upstash
+    AbortOnConnectFail = false,
     ConnectTimeout = 5000,
     SyncTimeout = 5000
 };
-builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConnectionString));
+redisOptions.Ssl = true; // Enable SSL for secure connection
+redisOptions.AbortOnConnectFail = false; // Keep the app alive if Redis is down
+redisOptions.ConnectTimeout = 5000;      // Wait 5 seconds before timing out
+redisOptions.ConnectRetry = 5;           // Try 5 times to reconnect
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisOptions));
 builder.Services.AddScoped<IJobScheduler, JobScheduler> ();
 builder.Services.AddSingleton<IJobRunner, JobRunner> ();
 builder.Services.AddScoped<IQueueingService, QueueingService> ();
@@ -38,10 +47,10 @@ builder.Services.AddCors(options =>
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-     throw new InvalidOperationException("Connection string 'AppDbContext'" +
+     throw new InvalidOperationException("Connection string 'DefaultConnection'" +
     " not found.");
 
-builder.Services.AddDbContext<SeatContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<SeatContext>(options => options.UseNpgsql(connectionString));
 
 var app = builder.Build();
 

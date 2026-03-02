@@ -40,17 +40,17 @@ public class DbInitializer(IServiceScopeFactory scopeFactory, ILogger<DbInitiali
                 var seats = new List<Seat>();
                 for (int i = 1; i <= 200; i++)
                 {
-                    seats.Add(Seat.Create("AA123", DateTimeOffset.UtcNow.Date, ClassType.Economy, $"A{i}", SeatStatus.Available));
+                    seats.Add(Seat.Create("AA123", ClassType.Economy, $"A{i}", SeatStatus.Available));
                 }
 
                 for (int i = 1; i <= 150; i++)
                 {
-                    seats.Add(Seat.Create("BB456", DateTimeOffset.UtcNow.Date, ClassType.Economy, $"B{i}", SeatStatus.Available));
+                    seats.Add(Seat.Create("BB456", ClassType.Economy, $"B{i}", SeatStatus.Available));
                 }
 
                 for (int i = 1; i <= 180; i++)
                 {
-                    seats.Add(Seat.Create("CC789", DateTimeOffset.UtcNow.Date, ClassType.Economy, $"C{i}", SeatStatus.Available));
+                    seats.Add(Seat.Create("CC789", ClassType.Economy, $"C{i}", SeatStatus.Available));
                 }
                 
                 seatContext.Seats.AddRange(seats);
