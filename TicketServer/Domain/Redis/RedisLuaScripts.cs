@@ -3,5 +3,5 @@ namespace TicketServer.Domain.Redis;
 public static class RedisLuaScripts
 {
     public static readonly LuaScript LoadSeatInventoryScript = LuaScript.Prepare(
-        File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "SeatInventory.lua")));
+        File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "scripts", "SeatInventory.lua")));
 }
