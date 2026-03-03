@@ -16,12 +16,11 @@ var redisOptions = new ConfigurationOptions
 {
     EndPoints = { $"{redisSection["Host"]}:{redisSection["Port"]}" },
     Password = redisSection["Password"],
-    Ssl = true, // Must be true for Upstash
+    Ssl = redisSection.GetValue<bool>("UseSsl"),
     AbortOnConnectFail = false,
     ConnectTimeout = 5000,
     SyncTimeout = 5000
 };
-redisOptions.Ssl = true; // Enable SSL for secure connection
 redisOptions.AbortOnConnectFail = false; // Keep the app alive if Redis is down
 redisOptions.ConnectTimeout = 5000;      // Wait 5 seconds before timing out
 redisOptions.ConnectRetry = 5;           // Try 5 times to reconnect

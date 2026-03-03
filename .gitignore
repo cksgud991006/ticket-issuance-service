@@ -6,7 +6,7 @@
 **/Properties/*
 
 # host development files
-appsettings.*.json
+appsettings.json
 
 # db files
 **/Migrations/*
