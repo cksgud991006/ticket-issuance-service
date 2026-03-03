@@ -37,7 +37,7 @@ builder.Services.AddHostedService<TaskRunnerService>();
 builder.Services.AddHostedService<DbInitializer>();
 builder.Services.AddHostedService<SeatInventoryLoader>();
 
-var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()!;
 
 builder.Services.AddCors(options =>
 {
