@@ -6,10 +6,12 @@ namespace TicketServer.Application.Repositories;
 
 public class SeatInventoryRepository : ISeatInventoryRepository
 {
+    private readonly ILogger<SeatInventoryRepository> _logger;
     private readonly SeatContext _context;
 
-    public SeatInventoryRepository(SeatContext context)
+    public SeatInventoryRepository(ILogger<SeatInventoryRepository> logger, SeatContext context)
     {
+        _logger = logger;
         _context = context;
     }
 
@@ -62,16 +64,31 @@ public class SeatInventoryRepository : ISeatInventoryRepository
 
         return Task.CompletedTask;
     }
-    public Task UpdateSeatStatus(Seat seat, SeatStatus newStatus, string heldByUserId)
+    public async Task UpdateSeatStatus(Seat seat, SeatStatus newStatus, string heldByUserId)
     {
-        _context.Seats
-            .Where(s => s.SeatId == seat.SeatId)
-            .ExecuteUpdateAsync(row => row
-                .SetProperty(s => s.Status, newStatus)
-                .SetProperty(s => s.HeldByUserId, heldByUserId));
-
-        _context.SaveChangesAsync();
-
-        return Task.CompletedTask;
+        try {
+            int affectedRows = await _context.Seats
+                .Where(s => s.SeatId == seat.SeatId && s.Status == SeatStatus.Available)
+                .ExecuteUpdateAsync(row => row
+                    .SetProperty(s => s.Status, newStatus)
+                    .SetProperty(s => s.HeldByUserId, heldByUserId));
+ 
+            // 2. Logic Check: If 0, the seat wasn't available (or ID was wrong)
+            if (affectedRows == 0)
+            {
+                // Throw a specific error that your controller can catch
+                throw new InvalidOperationException("SEAT_UNAVAILABLE");
+            }
+        } catch (DbUpdateException ex)
+        {
+            // This catches actual DB errors (connection issues, etc.)
+            _logger.LogError(ex, "Database system failure during seat update.");
+            throw; 
+        } catch (InvalidOperationException ex) when (ex.Message == "SEAT_UNAVAILABLE")
+        {
+            // This catches your custom logic error
+            _logger.LogWarning($"Booking conflict for Seat {seat.SeatId}. It was likely taken.");
+            throw; // Pass this up to your controller
+        }
     }
 }
